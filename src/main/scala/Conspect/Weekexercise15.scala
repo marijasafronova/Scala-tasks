@@ -1,4 +1,6 @@
-object Weekexercise15 extends App{
+package Conspect
+
+object Weekexercise15 extends App {
 
   def getDay(day: Int): String = day match {
     case 1 => "monday"
@@ -12,7 +14,7 @@ object Weekexercise15 extends App{
   }
 
   def getDayType(day: String): String = day match {
-    case "monday" | "tuesday" | "wednesday" | "thursday" | "friday"  => "weekday"
+    case "monday" | "tuesday" | "wednesday" | "thursday" | "friday" => "weekday"
     case "saturday" | "sunday" => "weekend"
     case _ => "unknown"
   }

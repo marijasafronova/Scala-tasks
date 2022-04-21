@@ -1,3 +1,5 @@
+package Conspect
+
 import scala.io.StdIn.readLine
 
 object dayfour extends App {
@@ -13,10 +15,10 @@ object dayfour extends App {
   val Name = readLine("Hello. What is your name?")
   val WorkExpierience = readLine("How long have you worked at the firm?").toInt
   val Wage = readLine("What is your monthly wage?").toInt
-  if (WorkExpierience<2) {
+  if (WorkExpierience < 2) {
     println("Sorry, no bonus")
   } else {
-    val Bonus = (WorkExpierience-2)*(Wage*0.15)
+    val Bonus = (WorkExpierience - 2) * (Wage * 0.15)
     println(s"$Name, your bonus is $Bonus")
   }
 }

@@ -1,3 +1,5 @@
+package Conspect
+
 import scala.io.StdIn.readLine
 
 object firstassignment extends App {

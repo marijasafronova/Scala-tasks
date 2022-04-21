@@ -1,4 +1,6 @@
-import Weekdays.Weekday
+package Conspect
+
+import Conspect.Weekdays.Weekday
 
 object Weekdays extends Enumeration {
  type Weekday = Value

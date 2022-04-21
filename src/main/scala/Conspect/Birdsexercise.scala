@@ -1,3 +1,5 @@
+package Conspect
+
 trait  FlightTrait {
   def Fly(): Unit
 }
@@ -8,13 +10,13 @@ trait SwimmingTrait {
   def Swim(): Unit
 }
 class Penguin(var name: String) extends SwimmingTrait {
-  def Swim(): Unit = println(s"Penguin $name is swimming")
+  def Swim(): Unit = println(s"Conspect.Penguin $name is swimming")
 }
 class Chicken(var name: String) extends RunningTrait {
-  def Run(): Unit = println(s"Chicken $name is running")
+  def Run(): Unit = println(s"Conspect.Chicken $name is running")
 }
 class Sparrow(var name: String) extends FlightTrait {
-  def Fly(): Unit = println(s"Sparrow $name is flying")
+  def Fly(): Unit = println(s"Conspect.Sparrow $name is flying")
 }
 
 object Birdsexercise extends App {
