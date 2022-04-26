@@ -11,3 +11,6 @@ case class fruit(genus: String,
                  calories:Double=0,
                  sugar:Double=0
                 )
+{
+  val nonsugars = carbohydrates-sugar
+}
