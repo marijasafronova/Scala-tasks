@@ -7,7 +7,7 @@ import scala.xml.XML
 
 object day21XML extends App {
 
-  val url = "https://gist.github.com/Dhilip1997/8cddf24d5e2e3528091d18c06b462b8d/raw/8441ac04511f535c27cffc3cc9a1b22ac013e360/Raw%2520data.xml"
+  val url = "https://gist.github.com/Ram-N/5189462/raw/46db0b43ad7bf9cbd32a8932f3ab981bd4b4da7c/books.xml"
 
   val dstFolder = "src/resources/xml"
 
