@@ -4,7 +4,7 @@ class BCgame (var playerA: String,
               var playerB: String,
               var numberA: List[Int],
               var numberB: List[Int],
-              var isPlayerAStarting: Boolean,
+              var isPlayerAStarting: Boolean = true,
               var win: Boolean = false)  {
 
   //TODO function which splits 4 digit number and makes a list of digits
