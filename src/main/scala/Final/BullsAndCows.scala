@@ -17,20 +17,26 @@ class BullsAndCows {
   private var playerA = ""
   private var playerB = ""
 
+  // Creating database
+  val db = new BullsAndCowsDatabase("src/resources/db/game.db")
+  db.Migrate()
+
   // Guess history
-  private var guessesArray: ArrayBuffer[(String, String)] = ArrayBuffer()
+  private var turnHistory: ArrayBuffer[(String, String)] = ArrayBuffer()
 
   private def isSecondPlayerAComputer: Boolean = playerB == "COMPUTER"
 
   private def nextPlayer: Unit = isPlayerATurn = !isPlayerATurn
 
-  // Get history
-  private def getGuesses: Array[(String, String)] = guessesArray.toArray
   // Get input in int list
   private def getInputInList(msg: String): List[Int] = readLine(msg).trim.map(_.asDigit).toList
   // Get current player
   private def getCurrentPlayer: String = if (isPlayerATurn) playerA else playerB
+  // Get opposite player
+  private def getOppositePlayer: String = if (isPlayerATurn) playerB else playerA
 
+
+  // Function which checks users guess
   private def getGuess(msg: String): List[Int] = {
     var guess = getInputInList(msg)
 
@@ -68,6 +74,9 @@ class BullsAndCows {
     playerA = readLine("Player A what is your name? ")
     playerB = readLine("Player B what is your name? ")
 
+    db.insertPlayer(playerA)
+    db.insertPlayer(playerB)
+
     println("\nGame begins!")
     println(s"$playerA VS $playerB\n")
   }
@@ -77,6 +86,9 @@ class BullsAndCows {
     println("-" * 10 + "  Game Menu  " + "-" * 10)
     println("1. Player vs Player")
     println("2. Player vs Computer")
+    println("4. Scoreboard")
+    println("5. Rules")
+    println("6. Exit")
   }
 
   private def checkNumber(number: List[Int]): Boolean = {
@@ -103,7 +115,7 @@ class BullsAndCows {
     }
     number
   }
-
+ // ToDO 0B0C for the database
   private def BullsCowsCounter(playerNum: List[Int], input: List[Int]): Unit = {
     var cows = 0
     var bulls = 0
@@ -122,21 +134,19 @@ class BullsAndCows {
       if (bulls == 4) {
         gameWon = true
         println(s"$getCurrentPlayer you won, congratulations!")
+
+        db.insertResult(getCurrentPlayer, getOppositePlayer)
+        turnHistory.append((input.mkString, s"B$bulls"+s"C$cows"))
+        db.insertHistory(turnHistory)
       }
       else {
         println( s"Bulls: $bulls Cows: $cows")
+        turnHistory.append((input.mkString, s"B$bulls"+s"C$cows"))
       }
     }
   }
 
-  private def printGuesses(): Array[(String, String)] = {
-    for (((guess, result), index) <- guessesArray.zipWithIndex) {
-      val playerName = if (index % 2 == 0) playerA else playerB
-      println(s"Guess ${index + 1}. $playerName guessed $guess resulting in $result.")
-    }
-    guessesArray.toArray
-  }
-
+ // TODO 3rd mode
   private def PlayerVsPlayer: Unit = {
     Greetings
     getPlayerNumber
@@ -172,6 +182,23 @@ class BullsAndCows {
     }
   }
 
+  private def Scoreboard: Unit = {
+    db.getScoreboard
+    println("\n"*2)
+    Play
+  }
+
+  private def Rules: Unit = {
+    println("\n"*2)
+    println("The players each write a 4-digit secret number.\n" +
+      "The digits must be all different.\n" +
+      "Then, in turn, the players try to guess their opponent's number who gives the number of matches.\n" +
+      "The digits of the number guessed also must all be different.\n" +
+      "If the matching digits are in their right positions, they are \"bulls\",\n" +
+      "if in different positions, they are \"cows\"\n")
+    Play
+  }
+
   def Play: Unit = {
     Menu
     val gameOption = readLine("Choose game mode: ").toInt
@@ -179,6 +206,10 @@ class BullsAndCows {
     gameOption match {
       case 1 => PlayerVsPlayer
       case 2 => PlayerVsComputer
+      // case 3 => 2PlayerVSComputer
+      case 4 => Scoreboard
+      case 5 => Rules
+      case 6 =>
       case _ => Play
     }
   }

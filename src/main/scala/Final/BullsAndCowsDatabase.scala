@@ -3,9 +3,11 @@ package Final
 import org.sqlite.SQLiteException
 
 import java.sql.DriverManager
+import scala.collection.mutable.ArrayBuffer
 
 class  BullsAndCowsDatabase(val dbPath: String) {
   val url = s"jdbc:sqlite:$dbPath"
+
   val dbConnection = DriverManager.getConnection(url)
   println(s"Opened Database at ${dbConnection.getMetaData.getURL}")
 
@@ -37,7 +39,7 @@ class  BullsAndCowsDatabase(val dbPath: String) {
       """
         |CREATE TABLE IF NOT EXISTS players (
         |id INTEGER PRIMARY KEY,
-        |player TEXT NOT NULL,
+        |player TEXT NOT NULL UNIQUE,
         |created TEXT
         |);
         |""".stripMargin
@@ -72,7 +74,8 @@ class  BullsAndCowsDatabase(val dbPath: String) {
     query.executeBatch()
   }
 
-  def getLastId(table: String): Int = {
+  // Function to get last id in the specific table
+  private def getLastId(table: String): Int = {
     val query = dbConnection.createStatement()
     val sql =
       s"""
@@ -82,19 +85,44 @@ class  BullsAndCowsDatabase(val dbPath: String) {
     resultSet.getInt("id")
   }
 
-  def getPlayerId(player: String): Int = {
+  // Function to get player id in the db using player's name
+  // Usage: get player id in specific game to write it into the results table
+  private def getPlayerId(player: String): Int = {
     val query = dbConnection.createStatement()
     val sql =
       s"""
         |SELECT id FROM players
-        |WHERE player == $player
+        |WHERE player == "$player"
         |""".stripMargin
     val resultSet = query.executeQuery(sql)
     resultSet.getInt("id")
   }
 
-  def insertPlayer(player: String): Unit = {
+  def getScoreboard: Unit = {
+    val sql =
+      """
+        |SELECT p.player, COUNT(winner) wins FROM results r
+        |JOIN players p
+        |ON p.id == r.winner
+        |GROUP BY winner
+        |ORDER BY wins DESC;
+        |""".stripMargin
+
+    val query = dbConnection.createStatement()
+    val result = query.executeQuery(sql)
+
+    println("=" * 10 + " Scoreboard " + "=" * 10)
+    while (result.next()) {
+      println(result.getString("player") + ": " + result.getInt("wins"))
+    }
+
+  }
+
+  // Function to insert a player into the database
+  def insertPlayer(player: String): Boolean = {
     val lastId = getLastId("players")
+    var result = true
+
     val sql =
       """
         |INSERT INTO players (id, player, created)
@@ -103,14 +131,70 @@ class  BullsAndCowsDatabase(val dbPath: String) {
 
     val query = dbConnection.prepareStatement(sql)
 
+    // Because id's in db is unique and can't be duplicated
+    // So with our function we get last used id in db and giving it +1
+    // So now it will be the new id, that does not exist
     query.setInt(1, lastId+1)
     query.setString(2, player)
 
+    // Catching an error, because our field name in db is unique
+    // So we need to catch an error if we insert duplicate name
     try {
       query.execute()
-    } catch {
-      case e:SQLiteException => println("Duplicate name inserted")
     }
+    catch {
+      case e:SQLiteException =>
+        //println("Duplicate name inserted")
+        result = false
+    }
+    query.close()
+    result
+  }
+
+  def insertResult(winner: String, loser: String): Unit = {
+    val winnerId = getPlayerId(winner)
+    val loserId = getPlayerId(loser)
+    val lastId = getLastId("results")
+
+    val sql =
+      """
+        |INSERT INTO results (id, winner, loser, created)
+        |values (?,?,?,CURRENT_TIMESTAMP)
+        |""".stripMargin
+
+    val query =  dbConnection.prepareStatement(sql)
+
+    query.setInt(1, lastId+1)
+    query.setInt(2, winnerId)
+    query.setInt(3, loserId)
+
+    query.execute()
+
+    query.close()
+  }
+
+  def insertHistory(gameTurns: ArrayBuffer[(String, String)]): Unit = {
+    val lastGameId = getLastId("results")
+    val sql =
+      """
+        |INSERT INTO history (id, game_id, turn, guess, outcome, created)
+        |values (?,?,?,?,?,CURRENT_TIMESTAMP)
+        |""".stripMargin
+
+    val query = dbConnection.prepareStatement(sql)
+
+    for (((guess, result), index) <- gameTurns.zipWithIndex) {
+      val lastHistoryId = getLastId("history")
+
+      query.setInt(1, lastHistoryId+1)
+      query.setInt(2, lastGameId)
+      query.setInt(3, index+1)
+      query.setString(4, guess)
+      query.setString(5, result)
+
+      query.execute()
+    }
+
     query.close()
   }
 }
