@@ -73,6 +73,10 @@ class BullsAndCows {
   private def Greetings: Unit = {
     playerA = readLine("Player A what is your name? ")
     playerB = readLine("Player B what is your name? ")
+    while (playerA==playerB)
+      {
+        playerB = readLine(s"Player B $playerB, your name is already taken, please, choose another nickname for your game: ")
+      }
 
     db.insertPlayer(playerA)
     db.insertPlayer(playerB)
@@ -183,8 +187,9 @@ class BullsAndCows {
   }
 
   private def Scoreboard: Unit = {
+    println("\n")
     db.getScoreboard
-    println("\n"*2)
+    println("\n")
     Play
   }
 
@@ -200,8 +205,18 @@ class BullsAndCows {
   }
 
   def Play: Unit = {
+    var gameOption = 0
+
     Menu
-    val gameOption = readLine("Choose game mode: ").toInt
+    try {
+      gameOption = readLine("Choose game mode: ").toInt
+    }
+    catch {
+      case e: NumberFormatException => {
+        println("Your choice must be a number! Try again!")
+        Play
+      }
+    }
 
     gameOption match {
       case 1 => PlayerVsPlayer
@@ -209,8 +224,8 @@ class BullsAndCows {
       // case 3 => 2PlayerVSComputer
       case 4 => Scoreboard
       case 5 => Rules
-      case 6 =>
-      case _ => Play
+      case 6 => // does not return anything, app closes
+      case _ => Play // in case input number is higher than 6
     }
   }
 }
