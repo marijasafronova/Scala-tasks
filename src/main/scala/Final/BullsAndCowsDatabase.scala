@@ -3,7 +3,6 @@ package Final
 import org.sqlite.SQLiteException
 
 import java.sql.DriverManager
-import scala.collection.mutable.ArrayBuffer
 
 class  BullsAndCowsDatabase(val dbPath: String) {
   val url = s"jdbc:sqlite:$dbPath"
@@ -11,6 +10,7 @@ class  BullsAndCowsDatabase(val dbPath: String) {
   val dbConnection = DriverManager.getConnection(url)
   println(s"Opened Database at ${dbConnection.getMetaData.getURL}")
 
+  /** Function that drops all the tables in database if they exists */
   def dropAllTables(): Unit = {
     val query = dbConnection.createStatement()
     val sql1 =
@@ -25,14 +25,20 @@ class  BullsAndCowsDatabase(val dbPath: String) {
       """
         |DROP TABLE IF EXISTS results
         |""".stripMargin
+    val sql4 =
+      """
+        |DROP TABLE IF EXISTS modes
+        |""".stripMargin
 
     query.addBatch(sql1)
     query.addBatch(sql2)
     query.addBatch(sql3)
+    query.addBatch(sql4)
     query.executeBatch()
   }
 
-  def Migrate(): Unit = {
+  /** Function that creates tables players, results, history, modes in database if they do not exist */
+  def migrate(): Unit = {
     val query = dbConnection.createStatement()
 
     val sql1 =
@@ -67,14 +73,30 @@ class  BullsAndCowsDatabase(val dbPath: String) {
         |);
         |""".stripMargin
 
+    val sql4 =
+      """
+        |CREATE TABLE IF NOT EXISTS modes (
+        |id INTEGER PRIMARY KEY,
+        |game_id INTEGER NOT NULL,
+        |mode TEXT,
+        |created TEXT,
+        | FOREIGN KEY (game_id) REFERENCES results (id)
+        |);
+        |""".stripMargin
+
     query.addBatch(sql1)
     query.addBatch(sql2)
     query.addBatch(sql3)
+    query.addBatch(sql4)
 
     query.executeBatch()
   }
 
-  // Function to get last id in the specific table
+  /** Function to get last id in the specific table
+   *
+   * @param table
+   * @return last id
+   */
   private def getLastId(table: String): Int = {
     val query = dbConnection.createStatement()
     val sql =
@@ -85,8 +107,12 @@ class  BullsAndCowsDatabase(val dbPath: String) {
     resultSet.getInt("id")
   }
 
-  // Function to get player id in the db using player's name
-  // Usage: get player id in specific game to write it into the results table
+  /** Function to get player id in the db using player's name
+   *
+   * @param player
+   * @return playerId
+   * Usage: get player id in specific game to write it into the results table
+   */
   private def getPlayerId(player: String): Int = {
     val query = dbConnection.createStatement()
     val sql =
@@ -98,6 +124,8 @@ class  BullsAndCowsDatabase(val dbPath: String) {
     resultSet.getInt("id")
   }
 
+  /** Function to get player rating from database
+   */
   def getScoreboard: Unit = {
     val sql =
       """
@@ -118,8 +146,13 @@ class  BullsAndCowsDatabase(val dbPath: String) {
 
   }
 
-  // Function to insert a player into the database
-  def insertPlayer(player: String): Boolean = {
+  /**Function to insert a new player into the database table players
+   *
+   * @param player
+   * @return false or true
+   * if returns false, this player already exists in database
+   */
+  def insertNewPlayer(player: String): Boolean = {
     val lastId = getLastId("players")
     var result = true
 
@@ -131,26 +164,30 @@ class  BullsAndCowsDatabase(val dbPath: String) {
 
     val query = dbConnection.prepareStatement(sql)
 
-    // Because id's in db is unique and can't be duplicated
-    // So with our function we get last used id in db and giving it +1
-    // So now it will be the new id, that does not exist
+    /** Because id's in db is unique and can't be duplicated
+     * So with our function we get last used id in db and giving it +1
+     * So now it will be the new id, that does not exist
+     */
     query.setInt(1, lastId+1)
     query.setString(2, player)
 
-    // Catching an error, because our field name in db is unique
-    // So we need to catch an error if we insert duplicate name
+    /** Catching an error, because our field name in db is unique
+    * So we need to catch an error if we insert duplicate name
+    */
     try {
       query.execute()
     }
     catch {
       case e:SQLiteException =>
-        //println("Duplicate name inserted")
         result = false
     }
     query.close()
     result
   }
 
+ /** Function to insert last game result into the database table results
+  ** @param winner, loser
+  */
   def insertResult(winner: String, loser: String): Unit = {
     val winnerId = getPlayerId(winner)
     val loserId = getPlayerId(loser)
@@ -173,7 +210,34 @@ class  BullsAndCowsDatabase(val dbPath: String) {
     query.close()
   }
 
-  def insertHistory(gameTurns: ArrayBuffer[(String, String)]): Unit = {
+  /** Function to insert last game mode into the database table modes
+   ** @param mode
+   */
+  def insertMode (mode: String): Unit ={
+    val lastId = getLastId("modes")
+    val lastResultId = getLastId("results")
+
+    val sql =
+      """
+        |INSERT INTO modes (id, game_id, mode, created)
+        |values (?,?,?,CURRENT_TIMESTAMP)
+        |""".stripMargin
+
+    val query =  dbConnection.prepareStatement(sql)
+
+    query.setInt(1, lastId+1)
+    query.setInt(2, lastResultId)
+    query.setString(3, mode)
+
+    query.execute()
+
+    query.close()
+  }
+
+  /** Function to insert last game turns, guesses, outcome into the database table history
+   ** @param winner, loser
+   */
+  def insertHistory(gameTurns: Array[(String, String)]): Unit = {
     val lastGameId = getLastId("results")
     val sql =
       """
