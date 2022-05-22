@@ -308,7 +308,6 @@ class BullsAndCows {
   }
 
   /** Displays game menu, asks to choose game mode, launches that mode.
-   * Returns gameOption number.
    */
   def play: Unit = {
     menu
