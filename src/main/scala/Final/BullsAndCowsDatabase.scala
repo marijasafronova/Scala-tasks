@@ -104,7 +104,11 @@ class  BullsAndCowsDatabase(val dbPath: String) {
         |SELECT MAX(id) id FROM $table;
         |""".stripMargin
     val resultSet = query.executeQuery(sql)
-    resultSet.getInt("id")
+    val id = resultSet.getInt("id")
+
+    query.close()
+
+    id
   }
 
   /** Function to get player id in the db using player's name
@@ -114,14 +118,21 @@ class  BullsAndCowsDatabase(val dbPath: String) {
    * Usage: get player id in specific game to write it into the results table
    */
   private def getPlayerId(player: String): Int = {
-    val query = dbConnection.createStatement()
     val sql =
       s"""
         |SELECT id FROM players
-        |WHERE player == "$player"
+        |WHERE player == ?
         |""".stripMargin
-    val resultSet = query.executeQuery(sql)
-    resultSet.getInt("id")
+
+    val query = dbConnection.prepareStatement(sql)
+
+    query.setString(1, player)
+
+    val resultSet = query.executeQuery
+    val id = resultSet.getInt("id")
+
+    resultSet.close()
+    id
   }
 
   /** Function to get player rating from database
@@ -138,6 +149,8 @@ class  BullsAndCowsDatabase(val dbPath: String) {
 
     val query = dbConnection.createStatement()
     val result = query.executeQuery(sql)
+
+    query.close()
 
     println("=" * 10 + " Scoreboard " + "=" * 10)
     while (result.next()) {
@@ -261,4 +274,41 @@ class  BullsAndCowsDatabase(val dbPath: String) {
 
     query.close()
   }
+
+//  def getPlayerCount(player:String):Int = {
+//    val sql =
+//      """
+//        |SELECT COUNT(*) cnt FROM players p
+//        |WHERE player = ?;
+//        |""".stripMargin
+//    val preparedStmt: PreparedStatement = dbConnection.prepareStatement(sql)
+//
+//    preparedStmt.setString(1, player)
+//
+//    val rs = preparedStmt.executeQuery
+//
+//    val cnt = rs.getInt(1) //just the first column not worrying about the column name
+//    preparedStmt.close()
+//    cnt
+//  }
+//
+//  def getPlayerId(player: String): Int = {
+//    if (getPlayerCount(player) == 0) 0 else {
+//      val sql =
+//        """
+//          |SELECT id cnt FROM players p
+//          |WHERE player = ?
+//          |LIMIT 1;
+//          |""".stripMargin
+//      val preparedStmt: PreparedStatement = dbConnection.prepareStatement(sql)
+//
+//      preparedStmt.setString(1, player)
+//
+//      val rs = preparedStmt.executeQuery
+//
+//      val id = rs.getInt(1) //just the first column not worrying about the column name
+//      preparedStmt.close()
+//      id
+//    }
+//  }
 }
