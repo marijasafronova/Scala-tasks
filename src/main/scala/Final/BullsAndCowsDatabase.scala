@@ -150,13 +150,12 @@ class  BullsAndCowsDatabase(val dbPath: String) {
     val query = dbConnection.createStatement()
     val result = query.executeQuery(sql)
 
-    query.close()
-
     println("=" * 10 + " Scoreboard " + "=" * 10)
     while (result.next()) {
       println(result.getString("player") + ": " + result.getInt("wins"))
     }
 
+    query.close()
   }
 
   /**Function to insert a new player into the database table players
