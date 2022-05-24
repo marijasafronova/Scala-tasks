@@ -274,40 +274,4 @@ class  BullsAndCowsDatabase(val dbPath: String) {
     query.close()
   }
 
-//  def getPlayerCount(player:String):Int = {
-//    val sql =
-//      """
-//        |SELECT COUNT(*) cnt FROM players p
-//        |WHERE player = ?;
-//        |""".stripMargin
-//    val preparedStmt: PreparedStatement = dbConnection.prepareStatement(sql)
-//
-//    preparedStmt.setString(1, player)
-//
-//    val rs = preparedStmt.executeQuery
-//
-//    val cnt = rs.getInt(1) //just the first column not worrying about the column name
-//    preparedStmt.close()
-//    cnt
-//  }
-//
-//  def getPlayerId(player: String): Int = {
-//    if (getPlayerCount(player) == 0) 0 else {
-//      val sql =
-//        """
-//          |SELECT id cnt FROM players p
-//          |WHERE player = ?
-//          |LIMIT 1;
-//          |""".stripMargin
-//      val preparedStmt: PreparedStatement = dbConnection.prepareStatement(sql)
-//
-//      preparedStmt.setString(1, player)
-//
-//      val rs = preparedStmt.executeQuery
-//
-//      val id = rs.getInt(1) //just the first column not worrying about the column name
-//      preparedStmt.close()
-//      id
-//    }
-//  }
 }
